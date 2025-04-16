@@ -1,0 +1,38 @@
+name: Build and Publish NuGet Package
+
+# Trigger this workflow only when a version tag (e.g. v1.0.0) is pushed
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    # Checkout the source code from the repository
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Set up the .NET SDK (adjust version if needed)
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    # Restore project dependencies
+    - name: Restore dependencies
+      run: dotnet restore
+
+    # Build the project in Release configuration
+    - name: Build project
+      run: dotnet build --configuration Release --no-restore
+
+    # Create the NuGet package (.nupkg)
+    - name: Pack NuGet package
+      run: dotnet pack --configuration Release --no-build
+
+    # Publish the package to nuget.org using a secret API key
+    - name: Publish to NuGet.org
+      run: dotnet nuget push "**/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
