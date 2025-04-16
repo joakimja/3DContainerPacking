@@ -105,7 +105,7 @@ namespace CromulentBisgetti.ContainerPacking.Tests
                 Assert.Equal(c.PercentItemVolumePacked, packingResult.PercentItemVolumePacked);
             }
         }
-         
+          
        
     }
 }
