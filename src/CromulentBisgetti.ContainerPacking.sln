@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CromulentBisgetti.ContainerPacking", "CromulentBisgetti.ContainerPacking\CromulentBisgetti.ContainerPacking.csproj", "{49D6AD56-1545-4864-AC6E-80A8922742DF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CromulentBisgetti.ContainerPacking.Services", "CromulentBisgetti.ContainerPacking\CromulentBisgetti.ContainerPacking.Services.csproj", "{49D6AD56-1545-4864-AC6E-80A8922742DF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CromulentBisgetti.ContainerPacking.Tests", "CromulentBisgetti.ContainerPacking.Tests\CromulentBisgetti.ContainerPacking.Tests.csproj", "{E1801EDB-16CF-4F76-A3C7-BDD55F1C8360}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CromulentBisgetti.ContainerPacking.Services.Tests", "CromulentBisgetti.ContainerPacking.Tests\CromulentBisgetti.ContainerPacking.Services.Tests.csproj", "{E1801EDB-16CF-4F76-A3C7-BDD55F1C8360}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
