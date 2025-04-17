@@ -21,7 +21,7 @@ jobs:
         dotnet-version: '9.0.x'
 
     - name: Restore dependencies
-      run: dotnet restore '3DContainerPacking/src/3DContainerPacking.sln'
+      run: dotnet restore '.\src\3DContainerPacking.sln'
 
     - name: Build project
       run: dotnet build '3DContainerPacking/src/3DContainerPacking.sln' --configuration Release --no-restore
