@@ -11,6 +11,7 @@
     <description>$description$</description>
     <releaseNotes>init release</releaseNotes>
     <copyright>Copyright 2025</copyright>
+	<icon>icons/nuget-icon.png</icon>
     <tags></tags>
   </metadata>
 </package>
