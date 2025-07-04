@@ -3,7 +3,17 @@
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <PackageId>CromulentBisgetti.ContainerPacking.Services</PackageId>
-    <Version>1.0.1.1</Version>
+    <Version>1.0.1.2</Version>
+    <Authors>joakimja</Authors>
+    <Company></Company>
+    <Description>3D container packing library forked from David M. Chapman’s 3DContainerPacking project under MIT License.</Description>
+    <PackageProjectUrl>https://github.com/joakimja/3DContainerPacking</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/joakimja/3DContainerPacking</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <!-- Licensing info -->
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Copyright>© 2025 joakimja. Based on work by David M. Chapman under MIT License.</Copyright>
   </PropertyGroup>
 
 </Project>
