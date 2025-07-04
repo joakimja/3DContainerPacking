@@ -1,18 +1,16 @@
 ﻿# CromulentBisgetti.ContainerPacking.Services
 
-[![NuGet](https://img.shields.io/nuget/v/CromulentBisgetti.ContainerPacking.Services.svg)](https://www.nuget.org/packages/CromulentBisgetti.ContainerPacking.Services/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Build](https://img.shields.io/github/actions/workflow/status/joakimja/3DContainerPacking/ci.yml?branch=main)](https://github.com/joakimja/3DContainerPacking/actions)
-
 **CromulentBisgetti.ContainerPacking.Services** is a .NET 9 library for planning and optimizing the packing of containers, trucks, or other boxes.
 
 It helps you compute how to fit items efficiently into 3D space, supporting logistics, shipping, and warehouse automation.
+
+This library continues the development of [davidmchapman's original project](https://github.com/davidmchapman/3DContainerPacking) to keep it maintained and evolving.
 
 ---
 
 ## 📦 Installation
 
-Install via [NuGet.org](https://www.nuget.org/packages/CromulentBisgetti.ContainerPacking.Services/):
+Install via NuGet.org:
 
 ```bash
 dotnet add package CromulentBisgetti.ContainerPacking.Services
@@ -73,4 +71,4 @@ Source code and issue tracking:
 
 ## 📜 License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the LICENSE file for details.
