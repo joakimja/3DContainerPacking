@@ -17,4 +17,8 @@
     <Copyright>© 2025 joakimja. Based on work by David M. Chapman under MIT License.</Copyright>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Update="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
 </Project>
