@@ -35,6 +35,57 @@ The list of ContainerPackingResults contains a ContainerPackingResult object for
 
 Internally, the Pack() method will try to pack all the containers with all the items using all the requested algorithms in parallel. If you have a list of containers you want to try, but want them to run serially, then you can call Pack() with one container at a time. For example, if you want to run a large set of containers but would like to update the user interface as each one finishes, then you would want to call Pack() multiple times asynchronously and update the UI as each result returns.
 
+## Orientation restrictions
+
+`Item.KeepUpright` keeps the original height vertical and
+`Item.KeepLengthwise` keeps the original length parallel to the container length.
+Both default to `false`. With restrictions enabled, item dimensions mean
+`Dim1 = length`, `Dim2 = width`, `Dim3 = height`. Returned coordinates and packed
+dimensions use **X = length, Y = height, Z = width**.
+
+| KeepUpright | KeepLengthwise | Allowed physical (X, Y, Z) dimensions |
+|---|---|---|
+| false | false | All existing permutations |
+| true | false | (length, height, width), (width, height, length) |
+| false | true | (length, height, width), (length, width, height) |
+| true | true | (length, height, width) |
+
+Use `PackingOptions` for restrictions on every item in a packing call:
+
+```csharp
+using CromulentBisgetti.ContainerPacking;
+using CromulentBisgetti.ContainerPacking.Algorithms;
+using CromulentBisgetti.ContainerPacking.Entities;
+
+var packages = new List<Item> { new Item(1, 4800, 1200, 1100, 8) };
+var trucks = new List<Container> { new Container(1, 13600, 2500, 2700) };
+var options = new PackingOptions { KeepUpright = true, KeepLengthwise = true };
+var results = PackingService.Pack(
+    trucks, packages, new List<int> { (int)AlgorithmType.EB_AFIT }, options);
+var packing = results[0].AlgorithmPackingResults[0];
+// Packed package dimensions: X=4800, Y=1100, Z=1200.
+```
+
+Individual items can add restrictions:
+
+```csharp
+var item = new Item(2, 4800, 1200, 1100, 3)
+{
+    KeepUpright = true,
+    KeepLengthwise = true
+};
+```
+
+Global and individual flags combine using OR; individual `false` cannot remove
+a global restriction. Null options apply only individual flags. Existing
+three-argument calls continue to work, and direct `EB_AFIT.Run` calls respect
+individual flags. All quantity copies retain their restrictions. Items that
+cannot fit in an allowed orientation are returned in `UnpackedItems`.
+
+Restrictions govern placement and layer selection even when EB-AFIT internally
+rotates the container. The algorithm optimizes within allowed orientations;
+the model does not assess weight, physical support or cargo securing.
+
 ## Demo WebAPI Application
 
 This project also includes a demo web application that lets the user specify an arbitrary set of items, an arbitrary set of containers, and the packing algorithms to use. AJAX packing requests are sent to the server and handled by a WebAPI controller. Once returned, each pack solution can be viewed in the WebGL visualization tool by clicking the camera icon. 

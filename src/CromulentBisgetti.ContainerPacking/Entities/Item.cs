@@ -38,6 +38,14 @@ namespace CromulentBisgetti.ContainerPacking.Entities
 
 		#region Public Properties
 
+		/// <summary>Keep Dim3 (original height) on the container's physical Y axis.</summary>
+		[DataMember]
+		public bool KeepUpright { get; set; }
+
+		/// <summary>Keep Dim1 (original length) on the container's physical X axis.</summary>
+		[DataMember]
+		public bool KeepLengthwise { get; set; }
+
 		/// <summary>
 		/// Gets or sets the item ID.
 		/// </summary>
