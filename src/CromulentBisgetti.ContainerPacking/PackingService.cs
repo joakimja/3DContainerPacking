@@ -22,6 +22,18 @@ namespace CromulentBisgetti.ContainerPacking
 		/// <returns>A container packing result with lists of the packed and unpacked items.</returns>
 		public static List<ContainerPackingResult> Pack(List<Container> containers, List<Item> itemsToPack, List<int> algorithmTypeIDs)
 		{
+			return Pack(containers, itemsToPack, algorithmTypeIDs, null);
+		}
+
+		/// <summary>
+		/// Packs items with global orientation restrictions. Item restrictions are additive.
+		/// A null options value applies only the individual item restrictions.
+		/// </summary>
+		public static List<ContainerPackingResult> Pack(List<Container> containers, List<Item> itemsToPack, List<int> algorithmTypeIDs, PackingOptions options)
+		{
+			// Snapshot flags before starting parallel container/algorithm evaluations.
+			bool keepUpright = options?.KeepUpright ?? false;
+			bool keepLengthwise = options?.KeepLengthwise ?? false;
 			Object sync = new Object { };
 			List<ContainerPackingResult> result = new List<ContainerPackingResult>();
 
@@ -40,7 +52,11 @@ namespace CromulentBisgetti.ContainerPacking
 
 					itemsToPack.ForEach(item =>
 					{
-						items.Add(new Item(item.ID, item.Dim1, item.Dim2, item.Dim3, item.Quantity));
+						items.Add(new Item(item.ID, item.Dim1, item.Dim2, item.Dim3, item.Quantity)
+						{
+							KeepUpright = keepUpright || item.KeepUpright,
+							KeepLengthwise = keepLengthwise || item.KeepLengthwise
+						});
 					});
 
 					Stopwatch stopwatch = new Stopwatch();

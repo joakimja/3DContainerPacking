@@ -75,6 +75,8 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 		private int bboxi;
 		private int bestIteration;
 		private int bestVariant;
+		private bool hasOrientationRestrictions;
+		private List<Orientation>[] allowedOrientations;
 		private int boxi;
 		private int cboxi;
 		private int layerListLen;
@@ -116,6 +118,118 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 		#endregion Private Variables
 
 		#region Private Methods
+
+		// Dimension identities, rather than values, keep equal-sized axes unambiguous.
+		private static readonly (int X, int Y, int Z)[] dimensionPermutations =
+		{
+			(1, 2, 3), (1, 3, 2), (2, 1, 3),
+			(2, 3, 1), (3, 1, 2), (3, 2, 1)
+		};
+
+		private void SetAllowedOrientations(int variant)
+		{
+			// Internal slots that OutputBoxList maps to physical length and height.
+			(int lengthSlot, int heightSlot) = variant switch
+			{
+				1 => (0, 1), 2 => (2, 1), 3 => (1, 2),
+				4 => (1, 0), 5 => (0, 2), 6 => (2, 0),
+				_ => throw new ArgumentOutOfRangeException(nameof(variant))
+			};
+
+			allowedOrientations = new List<Orientation>[itemsToPack.Count];
+			for (int i = 1; i <= itemsToPackCount; i += itemsToPack[i].Quantity)
+			{
+				Item item = itemsToPack[i];
+				var orientations = new List<Orientation>(6);
+				foreach (var permutation in dimensionPermutations)
+				{
+					int lengthDimension = GetSlot(permutation, lengthSlot);
+					int heightDimension = GetSlot(permutation, heightSlot);
+					if (item.KeepLengthwise && lengthDimension != 1) continue;
+					if (item.KeepUpright && heightDimension != 3) continue;
+					var orientation = new Orientation(
+						GetDimension(item, permutation.X),
+						GetDimension(item, permutation.Y),
+						GetDimension(item, permutation.Z));
+					if (!orientations.Contains(orientation)) orientations.Add(orientation);
+				}
+				// Quantity expansion retains a common immutable orientation list per type.
+				for (int j = i; j < i + item.Quantity; j++) allowedOrientations[j] = orientations;
+			}
+		}
+
+		private static int GetSlot((int X, int Y, int Z) permutation, int slot)
+		{
+			return slot == 0 ? permutation.X : slot == 1 ? permutation.Y : permutation.Z;
+		}
+
+		private static decimal GetDimension(Item item, int dimension)
+		{
+			return dimension == 1 ? item.Dim1 : dimension == 2 ? item.Dim2 : item.Dim3;
+		}
+
+		private bool FitsLayer(Orientation orientation, decimal thickness)
+		{
+			return orientation.X <= px && orientation.Y <= thickness && orientation.Z <= pz;
+		}
+
+		private decimal EvaluateRestrictedLayer(int itemIndex, decimal height, decimal thickness, bool unpackedOnly)
+		{
+			decimal evaluation = 0;
+			for (int i = 1; i <= itemsToPackCount; i++)
+			{
+				if (i == itemIndex || (unpackedOnly && itemsToPack[i].IsPacked)) continue;
+				decimal difference = decimal.MaxValue;
+				foreach (Orientation orientation in allowedOrientations[i])
+				{
+					if (FitsLayer(orientation, thickness))
+						difference = Math.Min(difference, Math.Abs(height - orientation.Y));
+				}
+				// An item that cannot fit contributes no impossible height to the heuristic.
+				if (difference != decimal.MaxValue) evaluation += difference;
+			}
+			return evaluation;
+		}
+
+		private void ListRestrictedLayers()
+		{
+			layerListLen = 0;
+			var heights = new HashSet<decimal>();
+			for (int i = 1; i <= itemsToPackCount; i++)
+			{
+				foreach (Orientation orientation in allowedOrientations[i])
+				{
+					if (!FitsLayer(orientation, py) || !heights.Add(orientation.Y)) continue;
+					layers.Add(new Layer
+					{
+						LayerDim = orientation.Y,
+						LayerEval = EvaluateRestrictedLayer(i, orientation.Y, py, false)
+					});
+					layerListLen++;
+				}
+			}
+		}
+
+		private void FindRestrictedLayer(decimal thickness)
+		{
+			layerThickness = 0;
+			decimal bestEvaluation = decimal.MaxValue;
+			for (int i = 1; i <= itemsToPackCount; i++)
+			{
+				if (itemsToPack[i].IsPacked) continue;
+				foreach (Orientation orientation in allowedOrientations[i])
+				{
+					if (!FitsLayer(orientation, thickness)) continue;
+					decimal evaluation = EvaluateRestrictedLayer(i, orientation.Y, thickness, true);
+					if (evaluation < bestEvaluation)
+					{
+						bestEvaluation = evaluation;
+						layerThickness = orientation.Y;
+					}
+				}
+			}
+			if (layerThickness == 0 || layerThickness > remainpy) packing = false;
+		}
 
 		/// <summary>
 		/// Analyzes each unpacked box to find the best fitting one to the empty space given.
@@ -290,6 +404,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 
 			for (int containerOrientationVariant = 1; (containerOrientationVariant <= 6) && !quit; containerOrientationVariant++)
 			{
+				if (hasOrientationRestrictions) SetAllowedOrientations(containerOrientationVariant);
 				switch (containerOrientationVariant)
 				{
 					case 1:
@@ -379,7 +494,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 
 				if (hundredPercentPacked) break;
 
-				if ((container.Length == container.Height) && (container.Height == container.Width)) containerOrientationVariant = 6;
+				if (!hasOrientationRestrictions && (container.Length == container.Height) && (container.Height == container.Width)) containerOrientationVariant = 6;
 
 				layers = new List<Layer>();
 			}
@@ -412,6 +527,15 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 
 				if (x > itemsToPackCount) return;
 
+				if (hasOrientationRestrictions)
+				{
+					foreach (Orientation orientation in allowedOrientations[x])
+					{
+						AnalyzeBox(hmx, hy, hmy, hz, hmz, orientation.X, orientation.Y, orientation.Z);
+					}
+					continue;
+				}
+
 				AnalyzeBox(hmx, hy, hmy, hz, hmz, itemsToPack[x].Dim1, itemsToPack[x].Dim2, itemsToPack[x].Dim3);
 
 				if ((itemsToPack[x].Dim1 == itemsToPack[x].Dim3) && (itemsToPack[x].Dim3 == itemsToPack[x].Dim2)) continue;
@@ -429,6 +553,11 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 		/// </summary>
 		private void FindLayer(decimal thickness)
 		{
+			if (hasOrientationRestrictions)
+			{
+				FindRestrictedLayer(thickness);
+				return;
+			}
 			decimal exdim = 0;
 			decimal dimdif;
 			decimal dimen2 = 0;
@@ -527,6 +656,9 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 		/// </summary>
 		private void Initialize(Container container, List<Item> items)
 		{
+			bestVariant = 0;
+			bestIteration = 0;
+			hasOrientationRestrictions = items.Any(item => item.KeepUpright || item.KeepLengthwise);
 			itemsToPack = new List<Item>();
 			itemsPackedInOrder = new List<Item>();
 			result = new ContainerPackingResult();
@@ -542,7 +674,11 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 			{
 				for (int i = 1; i <= item.Quantity; i++)
 				{
-					Item newItem = new Item(item.ID, item.Dim1, item.Dim2, item.Dim3, item.Quantity);
+					Item newItem = new Item(item.ID, item.Dim1, item.Dim2, item.Dim3, item.Quantity)
+					{
+						KeepUpright = item.KeepUpright,
+						KeepLengthwise = item.KeepLengthwise
+					};
 					itemsToPack.Add(newItem);
 				}
 
@@ -573,6 +709,11 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 		/// </summary>
 		private void ListCanditLayers()
 		{
+			if (hasOrientationRestrictions)
+			{
+				ListRestrictedLayers();
+				return;
+			}
 			bool same;
 			decimal exdim = 0;
 			decimal dimdif;
@@ -1037,6 +1178,13 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 		/// </summary>
 		private void Report(Container container)
 		{
+			// No feasible placement was found, including when no allowed layer exists.
+			if (bestVariant == 0)
+			{
+				for (int i = 1; i <= itemsToPackCount; i++) itemsToPack[i].IsPacked = false;
+				return;
+			}
+			if (hasOrientationRestrictions) SetAllowedOrientations(bestVariant);
 			quit = false;
 
 			switch (bestVariant)
@@ -1145,6 +1293,8 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 		#endregion Private Methods
 
 		#region Private Classes
+
+		private readonly record struct Orientation(decimal X, decimal Y, decimal Z);
 
 		/// <summary>
 		/// A list that stores all the different lengths of all item dimensions.
