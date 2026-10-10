@@ -2,7 +2,6 @@
 using CromulentBisgetti.ContainerPacking.Entities;
 using System.Reflection;
 using static System.Runtime.InteropServices.JavaScript.JSType;
-using Xunit.Abstractions;
 
 namespace CromulentBisgetti.ContainerPacking.Tests
 {
