@@ -34,12 +34,34 @@ namespace CromulentBisgetti.ContainerPacking.Entities
 			this.Quantity = quantity;
 		}
 
-		#endregion Constructors
+        /// <summary>
+        /// Initializes a new instance of the Item class.
+        /// </summary>
+        /// <param name="id">The item ID.</param>
+        /// <param name="dim1">The length of one of the three item dimensions.</param>
+        /// <param name="dim2">The length of another of the three item dimensions.</param>
+        /// <param name="dim3">The length of the other of the three item dimensions.</param>
+        /// <param name="quantity">The item quantity.</param>
+		/// <param name="keepUpright">The item must be upside up.</param>
+		/// <param name="keepLengthwise">The item must be placed lengthwise.</param>
+        public Item(int id, decimal dim1, decimal dim2, decimal dim3, int quantity,bool keepUpright,bool keepLengthwise)
+        {
+            this.ID = id;
+            this.Dim1 = dim1;
+            this.Dim2 = dim2;
+            this.Dim3 = dim3;
+            this.volume = dim1 * dim2 * dim3;
+            this.Quantity = quantity;
+			this.KeepUpright=keepUpright;
+			this.KeepLengthwise=keepLengthwise;
+        }
 
-		#region Public Properties
+        #endregion Constructors
 
-		/// <summary>Keep Dim3 (original height) on the container's physical Y axis.</summary>
-		[DataMember]
+        #region Public Properties
+
+        /// <summary>Keep Dim3 (original height) on the container's physical Y axis.</summary>
+        [DataMember]
 		public bool KeepUpright { get; set; }
 
 		/// <summary>Keep Dim1 (original length) on the container's physical X axis.</summary>
