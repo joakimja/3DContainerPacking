@@ -26,7 +26,7 @@ namespace CromulentBisgetti.ContainerPacking
 		}
 
 		/// <summary>
-		/// Packs items with global orientation restrictions. Item restrictions are additive.
+		/// Packs items with global packing options. Item orientation restrictions are additive.
 		/// A null options value applies only the individual item restrictions.
 		/// </summary>
 		public static List<ContainerPackingResult> Pack(List<Container> containers, List<Item> itemsToPack, List<int> algorithmTypeIDs, PackingOptions options)
@@ -34,6 +34,7 @@ namespace CromulentBisgetti.ContainerPacking
 			// Snapshot flags before starting parallel container/algorithm evaluations.
 			bool keepUpright = options?.KeepUpright ?? false;
 			bool keepLengthwise = options?.KeepLengthwise ?? false;
+			bool stablePacking = options?.StablePacking ?? false;
 			Object sync = new Object { };
 			List<ContainerPackingResult> result = new List<ContainerPackingResult>();
 
@@ -45,6 +46,7 @@ namespace CromulentBisgetti.ContainerPacking
 				Parallel.ForEach(algorithmTypeIDs, algorithmTypeID =>
 				{
 					IPackingAlgorithm algorithm = GetPackingAlgorithmFromTypeID(algorithmTypeID);
+					if (algorithm is EB_AFIT ebAfit) ebAfit.StablePacking = stablePacking;
 
 					// Until I rewrite the algorithm with no side effects, we need to clone the item list
 					// so the parallel updates don't interfere with each other.

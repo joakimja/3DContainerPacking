@@ -135,3 +135,22 @@ Source code and issue tracking:
 ## 📜 License
 
 This project is licensed under the MIT License. See the LICENSE file for details.
+# Supported cargo placement
+
+Enable `PackingOptions.StablePacking = true` to refine EB-AFIT results
+in physical coordinates (X = length, Y = height,
+Z = width). Available floor positions are searched before stacking. A stacked
+package must have its entire footprint supported by one or more packages whose
+top faces are at exactly the same height; gaps and overhangs are rejected.
+Packages without a valid placement are returned as unpacked. Volume statistics
+describe this final layout, so they can differ from published unconstrained
+EB-AFIT reference results. Existing orientation restrictions still apply.
+
+The setting defaults to `false`; `false`, omitted options and `null` options
+retain the original EB-AFIT placements and performance. The setting is global
+for a packing call and can be combined with `KeepUpright` and `KeepLengthwise`.
+For direct algorithm calls, set `new EB_AFIT { StablePacking = true }`.
+
+The refinement is a deterministic heuristic, not a guarantee of optimal floor
+tiling or maximum fill. It checks geometric support, not weight, load capacity,
+friction or transport securing.
