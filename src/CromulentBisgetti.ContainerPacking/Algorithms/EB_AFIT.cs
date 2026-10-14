@@ -14,6 +14,9 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 	{
 		#region Public Methods
 
+		/// <summary>Enable floor-first placement and full support. Default is false.</summary>
+		public bool StablePacking { get; set; }
+
 		/// <summary>
 		/// Runs the packing algorithm.
 		/// </summary>
@@ -25,6 +28,10 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 			Initialize(container, items);
 			ExecuteIterations(container);
 			Report(container);
+			// Refine the heuristic layout in physical axes before returning any result.
+			if (StablePacking)
+				itemsPackedInOrder = SupportedPacking.Pack(container, itemsPackedInOrder,
+					itemsToPack.Skip(1).Take((int)itemsToPackCount).ToList());
 
 			AlgorithmPackingResult result = new AlgorithmPackingResult();
 			result.AlgorithmID = (int)AlgorithmType.EB_AFIT;
