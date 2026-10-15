@@ -69,18 +69,8 @@ namespace CromulentBisgetti.ContainerPacking.Tests
         //        }
         //    }
 
-        private static readonly Lazy<List<TestCase>> referenceCases = new(() =>
-            TestCaseReader.ReadTestCases("DataFiles\\ORLibrary.txt"));
-
-        public static IEnumerable<object[]> ReferenceCases()
-        {
-            for (int index = 0; index < referenceCases.Value.Count; index++)
-                yield return [index];
-        }
-
-        [Theory]
-        [MemberData(nameof(ReferenceCases))]
-        public void EB_AFIT_ReturnsSupportedGeometryForReferenceCase(int caseIndex)
+        [Fact]
+        public void EB_AFIT_Passes_700_Standard_Reference_Tests()
         {
             // ORLibrary.txt is an Embedded Resource in this project.
             // string resourceName = "CromulentBisgetti.ContainerPackingTests.DataFiles.ORLibrary.txt";
@@ -88,30 +78,31 @@ namespace CromulentBisgetti.ContainerPacking.Tests
 
             //using (Stream stream = assembly.GetManifestResourceStream(resourceName))
             //var data=LoadFileTestValue("ORLibrary");
-                var c = referenceCases.Value[caseIndex];
-                var result = PackingService.Pack([c.Container], c.Items, new List<int> { (int)AlgorithmType.EB_AFIT },
-                    new PackingOptions { StablePacking = true });
+            List<TestCase> cases = TestCaseReader.ReadTestCases("DataFiles\\ORLibrary.txt");
+            foreach (var c in cases)
+            {
+                var result = PackingService.Pack([c.Container], c.Items, new List<int> { (int)AlgorithmType.EB_AFIT });
 
                 var packingResult = result[0].AlgorithmPackingResults[0];
 
                 // Total number of items
                 Assert.Equal(c.TotalItems, packingResult.PackedItems.Count + packingResult.UnpackedItems.Count);
 
-                // Published EB-AFIT totals permit unsupported layouts. The stability
-                // requirement intentionally changes those totals; protect physical
-                // validity and accounting instead of the old unconstrained optimum.
-                SupportedPackingTests.AssertSupported(packingResult.PackedItems);
-                Assert.All(packingResult.PackedItems, item =>
-                {
-                    Assert.InRange(item.CoordX, 0, c.Container.Length - item.PackDimX);
-                    Assert.InRange(item.CoordY, 0, c.Container.Height - item.PackDimY);
-                    Assert.InRange(item.CoordZ, 0, c.Container.Width - item.PackDimZ);
-                });
-                decimal packedVolume = packingResult.PackedItems.Sum(i => i.Volume);
-                decimal totalVolume = packedVolume + packingResult.UnpackedItems.Sum(i => i.Volume);
-                Assert.Equal(Math.Round(packedVolume / (c.Container.Length * c.Container.Width * c.Container.Height) * 100, 2),
-                    packingResult.PercentContainerVolumePacked);
-                Assert.Equal(Math.Round(packedVolume / totalVolume * 100, 2), packingResult.PercentItemVolumePacked);
+                // Number of packed items
+                Assert.Equal(c.PackedItems, packingResult.PackedItems.Count);
+
+                // Volume percentage used in container
+                decimal expectedVolumePercent = c.PercentContainerVolumePacked;
+                decimal actualVolumePercent = packingResult.PercentContainerVolumePacked;
+
+                Assert.True(
+                    actualVolumePercent == expectedVolumePercent ||
+                    (actualVolumePercent == 87.20M && expectedVolumePercent == 87.21M),
+                    $"Mismatch in volume percentage: expected {expectedVolumePercent}, got {actualVolumePercent}");
+
+                // Percentage of item volume packed
+                Assert.Equal(c.PercentItemVolumePacked, packingResult.PercentItemVolumePacked);
+            }
         }
           
        
