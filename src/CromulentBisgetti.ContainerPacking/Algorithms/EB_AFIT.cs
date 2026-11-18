@@ -25,6 +25,7 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 			Initialize(container, items);
 			ExecuteIterations(container);
 			Report(container);
+			SettleItems(itemsPackedInOrder);
 
 			AlgorithmPackingResult result = new AlgorithmPackingResult();
 			result.AlgorithmID = (int)AlgorithmType.EB_AFIT;
@@ -118,6 +119,28 @@ namespace CromulentBisgetti.ContainerPacking.Algorithms
 		#endregion Private Variables
 
 		#region Private Methods
+
+		// Layers can leave gaps above shorter items. Lower items in physical height
+		// order so that earlier items have already reached their final positions.
+		private static void SettleItems(List<Item> items)
+		{
+			var settled = new List<Item>();
+			foreach (var item in items.OrderBy(i => i.CoordY))
+			{
+				decimal originalY = item.CoordY;
+				decimal supportY = 0;
+				foreach (var below in settled)
+				{
+					decimal top = below.CoordY + below.PackDimY;
+					if (top <= originalY && top > supportY &&
+						item.CoordX < below.CoordX + below.PackDimX && below.CoordX < item.CoordX + item.PackDimX &&
+						item.CoordZ < below.CoordZ + below.PackDimZ && below.CoordZ < item.CoordZ + item.PackDimZ)
+						supportY = top;
+				}
+				item.CoordY = supportY;
+				settled.Add(item);
+			}
+		}
 
 		// Dimension identities, rather than values, keep equal-sized axes unambiguous.
 		private static readonly (int X, int Y, int Z)[] dimensionPermutations =
